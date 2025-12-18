@@ -1,0 +1,244 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "am-agent-claude"
+version = "0.0.1"
+description = "A Claude/Cursor agent plugin for agent-manager"
+authors = [
+    {name = "John Westcott IV"}
+]
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.12"
+dependencies = [
+    "agent-manager",
+    "claude-agent-sdk",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "tox>=4.0.0",
+]
+
+[project.entry-points."agent_manager.agents"]
+claude = "am_agent_claude.claude:Agent"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["am_agent_claude*"]
+exclude = ["tests*"]
+
+[tool.ruff]
+# Set the maximum line length to 120 characters
+line-length = 120
+# Target Python 3.12+
+target-version = "py312"
+
+[tool.ruff.lint]
+# Enable Flake8-compatible rules, isort, and more
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort (import sorting)
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+# Configure import sorting
+known-first-party = ["am_agent_claude"]
+
+[tool.ruff.format]
+# Use Black-compatible formatting
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+# Minimum tox version
+min_version = 4.0
+# Test environments to run by default
+envlist = py312, lint, coverage
+# Isolated build ensures clean test environment
+isolated_build = true
+
+[testenv]
+# Base test environment for running pytest
+description = Run unit and integration tests with pytest
+deps =
+    pytest>=7.0.0
+    pytest-cov>=4.0.0
+    agent-manager
+    claude-agent-sdk
+commands =
+    pytest tests/ -v {posargs}
+
+[testenv:py312]
+# Python 3.12 specific environment
+description = Run tests with Python 3.12
+basepython = python3.12
+deps = {[testenv]deps}
+commands = {[testenv]commands}
+
+[testenv:coverage]
+# Run tests with coverage reporting
+description = Run tests with coverage analysis
+deps = {[testenv]deps}
+commands =
+    pytest tests/ --cov=am_agent_claude --cov-report=term-missing --cov-report=html --cov-report=xml {posargs}
+
+[testenv:coverage-report]
+# Generate coverage report only (useful after running coverage)
+description = Generate coverage reports
+deps =
+    coverage[toml]>=7.0.0
+skip_install = true
+commands =
+    coverage report --show-missing
+    coverage html
+
+[testenv:lint]
+# Run ruff linting
+description = Run linting with ruff
+deps =
+    ruff>=0.1.0
+skip_install = true
+commands =
+    ruff check am_agent_claude/ tests/ {posargs}
+
+[testenv:format]
+# Run ruff formatting
+description = Format code with ruff
+deps =
+    ruff>=0.1.0
+skip_install = true
+commands =
+    ruff format am_agent_claude/ tests/ {posargs}
+
+[testenv:format-check]
+# Check formatting without making changes
+description = Check code formatting without changes
+deps =
+    ruff>=0.1.0
+skip_install = true
+commands =
+    ruff format --check am_agent_claude/ tests/ {posargs}
+
+[testenv:type-check]
+# Optional: Add type checking with mypy (if you want to add it later)
+description = Run type checking with mypy
+deps =
+    mypy>=1.0.0
+    types-PyYAML
+skip_install = false
+commands =
+    mypy am_agent_claude/ {posargs}
+
+[testenv:all]
+# Run all checks: lint, format check, and tests with coverage
+description = Run all quality checks
+deps =
+    {[testenv:coverage]deps}
+    ruff>=0.1.0
+commands =
+    ruff check am_agent_claude/ tests/
+    ruff format --check am_agent_claude/ tests/
+    pytest tests/ --cov=am_agent_claude --cov-report=term-missing {posargs}
+
+[testenv:quick]
+# Quick test run without coverage
+description = Quick test run without coverage
+deps = {[testenv]deps}
+commands =
+    pytest tests/ -v --tb=short {posargs}
+
+[testenv:clean]
+# Clean up generated files
+description = Clean up build artifacts and cache files
+deps =
+skip_install = true
+allowlist_externals =
+    rm
+    find
+commands =
+    rm -rf .tox
+    rm -rf dist
+    rm -rf build
+    rm -rf .pytest_cache
+    rm -rf .coverage
+    rm -rf htmlcov
+    rm -rf .mypy_cache
+    rm -rf .ruff_cache
+    find . -type d -name __pycache__ -exec rm -rf {} +
+    find . -type d -name "*.egg-info" -exec rm -rf {} +
+"""
+
+[tool.pytest.ini_options]
+# Pytest configuration
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--disable-warnings",
+]
+# Markers for test categorization
+markers = [
+    "integration: Integration tests",
+    "unit: Unit tests",
+    "slow: Slow running tests",
+]
+
+[tool.coverage.run]
+# Coverage configuration
+source = ["am_agent_claude"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    ".tox/*",
+]
+
+[tool.coverage.report]
+# Coverage reporting configuration
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
