@@ -55,6 +55,14 @@ class Agent(AbstractAgent):
         self.pre_merge_hooks[".cursorrules*"] = self._validate_cursorrules
         self.pre_merge_hooks[".clinerules*"] = self._validate_cursorrules
 
+    def get_additional_root_level_files(self) -> list[str]:
+        """Claude agent also discovers CLAUDE.md from repository roots.
+
+        Returns:
+            List containing "CLAUDE.md" for Claude-specific root-level configuration
+        """
+        return ["CLAUDE.md"]
+
     def _validate_cursorrules(self, content: str, entry: dict, file_path: Path) -> str:
         """Validate cursorrules/clinerules content.
 
