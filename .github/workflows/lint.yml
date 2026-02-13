@@ -12,17 +12,30 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: am_agent_claude
+
+      - name: Checkout agent-manager
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/agent-manager
+          path: agent-manager
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Install agent-manager
+        run: pip install -e agent-manager
+
       - name: Install ruff
         run: pip install ruff
 
       - name: Check formatting
+        working-directory: am_agent_claude
         run: ruff format --check .
 
       - name: Check linting
+        working-directory: am_agent_claude
         run: ruff check .

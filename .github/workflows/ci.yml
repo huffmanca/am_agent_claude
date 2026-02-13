@@ -16,14 +16,27 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: am_agent_claude
+
+      - name: Checkout agent-manager
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/agent-manager
+          path: agent-manager
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install agent-manager
+        run: pip install -e agent-manager
+
       - name: Install dependencies
+        working-directory: am_agent_claude
         run: pip install -e ".[dev]"
 
       - name: Run tests
+        working-directory: am_agent_claude
         run: pytest tests/ -v
